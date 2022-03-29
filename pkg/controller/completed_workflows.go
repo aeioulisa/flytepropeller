@@ -58,20 +58,27 @@ func HasCompletedLabel(w *v1alpha1.FlyteWorkflow) bool {
 // Usually this is a list of all hours out of the 24 hours in the day - retention period - the current hour of the day
 func CalculateHoursToDelete(retentionPeriodHours, currentHourOfDay int, gcInterval int) []string {
 	hoursToDelete := make([]string, 0, gcInterval)
-	if currentHourOfDay - retentionPeriodHours - gcInterval + 1 < 0 {
-		for i := currentHourOfDay - retentionPeriodHours - gcInterval + 25; i <= currentHourOfDay - retentionPeriodHours + 24; i++ {
+
+	if gcInterval == 0 {
+		hoursToDelete = append(hoursToDelete, strconv.Itoa(currentHourOfDay))
+	}
+
+	hoursToDeleteStart := currentHourOfDay - retentionPeriodHours - gcInterval + 1
+	hoursToDeleteEnd := currentHourOfDay - retentionPeriodHours
+	if hoursToDeleteStart < 0 {
+		hoursToDeleteStart += 24
+		hoursToDeleteEnd += 24
+	}
+	if hoursToDeleteEnd < 24{
+		for i := hoursToDeleteStart; i <= hoursToDeleteEnd; i++ {
 			hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
 		}
-	}else {
-		if currentHourOfDay - retentionPeriodHours < 24{
-			for i := currentHourOfDay - retentionPeriodHours - gcInterval + 1; i <= currentHourOfDay - retentionPeriodHours; i++ {
-				hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
-			}
-		} else {
-
-			for i := currentHourOfDay - retentionPeriodHours - gcInterval + 1; i <= currentHourOfDay - retentionPeriodHours; i++ {
-				hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
-			}
+	} else {
+		for i := hoursToDeleteStart; i <= 23; i++ {
+			hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
+		}
+		for i := 0; i <= hoursToDeleteEnd- 24; i++{
+			hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
 		}
 	}
 
