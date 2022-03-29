@@ -41,7 +41,7 @@ func SetCompletedLabel(w *v1alpha1.FlyteWorkflow, currentTime time.Time) {
 		w.Labels = make(map[string]string)
 	}
 	w.Labels[workflowTerminationStatusKey] = workflowTerminatedValue
-	w.Labels[hourOfDayCompletedKey] = strconv.Itoa(currentTime.Hour())
+	w.Labels[hourOfDayCompletedKey] = strconv.Itoa(currentTime.Hour()+1)
 }
 
 func HasCompletedLabel(w *v1alpha1.FlyteWorkflow) bool {
@@ -56,27 +56,32 @@ func HasCompletedLabel(w *v1alpha1.FlyteWorkflow) bool {
 
 // Calculates a list of all the hours that should be deleted given the current hour of the day and the retentionperiod in hours
 // Usually this is a list of all hours out of the 24 hours in the day - retention period - the current hour of the day
-func CalculateHoursToDelete(retentionPeriodHours, currentHourOfDay int) []string {
-	numberOfHoursToDelete := 24 - retentionPeriodHours
-	hoursToDelete := make([]string, 0, numberOfHoursToDelete)
+func CalculateHoursToDelete(retentionPeriodHours, currentHourOfDay int, gcInterval int) []string {
+	hoursToDelete := make([]string, 0, gcInterval)
+	if currentHourOfDay - retentionPeriodHours - gcInterval + 1 < 0 {
+		for i := currentHourOfDay - retentionPeriodHours - gcInterval + 25; i <= currentHourOfDay - retentionPeriodHours + 24; i++ {
+			hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
+		}
+	}else {
+		if currentHourOfDay - retentionPeriodHours < 24{
+			for i := currentHourOfDay - retentionPeriodHours - gcInterval + 1; i <= currentHourOfDay - retentionPeriodHours; i++ {
+				hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
+			}
+		} else {
 
-	for i := 0; i < currentHourOfDay-retentionPeriodHours; i++ {
-		hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
+			for i := currentHourOfDay - retentionPeriodHours - gcInterval + 1; i <= currentHourOfDay - retentionPeriodHours; i++ {
+				hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
+			}
+		}
 	}
-	maxHourOfDay := 24
-	if currentHourOfDay-retentionPeriodHours < 0 {
-		maxHourOfDay = 24 + (currentHourOfDay - retentionPeriodHours)
-	}
-	for i := currentHourOfDay + 1; i < maxHourOfDay; i++ {
-		hoursToDelete = append(hoursToDelete, strconv.Itoa(i))
-	}
+
 	return hoursToDelete
 }
 
 // Creates a new selector that selects all completed workflows and workflows with completed hour label outside of the
 // retention window
-func CompletedWorkflowsSelectorOutsideRetentionPeriod(retentionPeriodHours int, currentTime time.Time) *v1.LabelSelector {
-	hoursToDelete := CalculateHoursToDelete(retentionPeriodHours, currentTime.Hour())
+func CompletedWorkflowsSelectorOutsideRetentionPeriod(retentionPeriodHours int, currentTime time.Time,gcInterval int) *v1.LabelSelector {
+	hoursToDelete := CalculateHoursToDelete(retentionPeriodHours, currentTime.Hour(), gcInterval)
 	s := CompletedWorkflowsLabelSelector()
 	s.MatchExpressions = append(s.MatchExpressions, v1.LabelSelectorRequirement{
 		Key:      hourOfDayCompletedKey,

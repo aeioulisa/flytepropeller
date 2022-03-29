@@ -102,9 +102,21 @@ func TestSetCompletedLabel(t *testing.T) {
 
 func TestCalculateHoursToDelete(t *testing.T) {
 	assert.Equal(t, []string{
-		"6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22",
-	}, CalculateHoursToDelete(6, 5))
+		"12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23",
+	}, CalculateHoursToDelete(2, 1, 12))
 
+	assert.Equal(t, []string{
+		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
+	}, CalculateHoursToDelete(2, 13, 12))
+
+	assert.Equal(t, []string{
+		"14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "0", "1",
+	}, CalculateHoursToDelete(2, 3, 12))
+
+	assert.Equal(t, []string{
+		"8", "9", "10",
+	}, CalculateHoursToDelete(3, 13, 3))
+/*
 	assert.Equal(t, []string{
 		"7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23",
 	}, CalculateHoursToDelete(6, 6))
@@ -140,12 +152,12 @@ func TestCalculateHoursToDelete(t *testing.T) {
 	assert.Equal(t, []string{"13"}, CalculateHoursToDelete(22, 12))
 	assert.Equal(t, []string{"1"}, CalculateHoursToDelete(22, 0))
 	assert.Equal(t, []string{"0"}, CalculateHoursToDelete(22, 23))
-	assert.Equal(t, []string{"23"}, CalculateHoursToDelete(22, 22))
+	assert.Equal(t, []string{"23"}, CalculateHoursToDelete(22, 22))*/
 }
 
 func TestCompletedWorkflowsSelectorOutsideRetentionPeriod(t *testing.T) {
 	n := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
-	s := CompletedWorkflowsSelectorOutsideRetentionPeriod(2, n)
+	s := CompletedWorkflowsSelectorOutsideRetentionPeriod(2, n,12)
 	v, ok := s.MatchLabels[workflowTerminationStatusKey]
 	assert.True(t, ok)
 	assert.Equal(t, workflowTerminatedValue, v)
