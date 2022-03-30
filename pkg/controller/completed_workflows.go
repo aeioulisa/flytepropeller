@@ -57,16 +57,13 @@ func HasCompletedLabel(w *v1alpha1.FlyteWorkflow) bool {
 // Calculates a list of all the hours that should be deleted given the current hour of the day and the retentionperiod in hours
 // Usually this is a list of all hours out of the 24 hours in the day - retention period - the current hour of the day
 func CalculateHoursToKeep(retentionPeriodHours int, currentTime time.Time) []string {
-	hoursToKeep := make([]string, 0, retentionPeriodHours)
-	day := currentTime.Day()
-	for i := currentTime.Hour(); i >= 0; i--{
-		hoursToKeep = append(hoursToKeep, strconv.Itoa(day) + "," + strconv.Itoa(i))
+	hoursToKeep := make([]string, 0, retentionPeriodHours+1)
+	if retentionPeriodHours == 0 {
+		return hoursToKeep
 	}
-	if currentTime.Hour() < retentionPeriodHours {
-		day -= 1
-		for i := currentTime.Hour() - retentionPeriodHours - 1; i > 0; i--{
-			hoursToKeep = append(hoursToKeep, strconv.Itoa(day) + "," + strconv.Itoa(24 - i))
-		}
+	for i := 0; i <= retentionPeriodHours; i++{
+		hoursToKeep = append(hoursToKeep, strconv.Itoa(currentTime.Day()) + "," + strconv.Itoa(currentTime.Hour()))
+		currentTime = currentTime.Add(-1*time.Hour)
 	}
 	return hoursToKeep
 }
@@ -78,7 +75,7 @@ func CompletedWorkflowsSelectorOutsideRetentionPeriod(retentionPeriodHours int, 
 	s := CompletedWorkflowsLabelSelector()
 	s.MatchExpressions = append(s.MatchExpressions, v1.LabelSelectorRequirement{
 		Key:      CompletedTimeKey,
-		Operator: v1.LabelSelectorOpIn,
+		Operator: v1.LabelSelectorOpNotIn,
 		Values:   hoursToDelete,
 	})
 	return s
