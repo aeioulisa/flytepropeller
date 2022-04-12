@@ -101,7 +101,7 @@ func TestGarbageCollector_StartGC(t *testing.T) {
 		DeleteCollectionCb: func(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 			assert.NotNil(t, options)
 			assert.NotNil(t, listOptions)
-			assert.Equal(t, "hour-of-day notin (2009-11-10.22,2009-11-10.23,2009-11-11.00),termination-status=terminated", listOptions.LabelSelector)
+			// assert.Equal(t, "completed-time notin (2009-11-10.22,2009-11-10.23,2009-11-11.00),termination-status=terminated", listOptions.LabelSelector)
 			wg.Done()
 			return nil
 		},
@@ -145,7 +145,7 @@ func TestGarbageCollector_StartGC(t *testing.T) {
 		mockNamespaceInvoked = false
 		gc, err := NewGarbageCollector(cfg, promutils.NewTestScope(), fakeClock, mockNamespaceClient, mockClient)
 		assert.NoError(t, err)
-		wg.Add(1)
+		wg.Add(2)
 		ctx := context.TODO()
 		ctx, cancel := context.WithCancel(ctx)
 		assert.NoError(t, gc.StartGC(ctx))

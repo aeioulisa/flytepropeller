@@ -13,6 +13,7 @@ const controllerAgentName = "flyteworkflow-controller"
 const workflowTerminationStatusKey = "termination-status"
 const workflowTerminatedValue = "terminated"
 const hourOfDayCompletedKey = "hour-of-day"
+const completedTimeKey = "completed-time"
 
 // This function creates a label selector, that will ignore all objects (in this case workflow) that DOES NOT have a
 // label key=workflowTerminationStatusKey with a value=workflowTerminatedValue
@@ -92,8 +93,19 @@ func CompletedWorkflowsSelectorOutsideRetentionPeriod(retentionPeriodHours int, 
 	hoursToKeep := CalculateHoursToKeep(retentionPeriodHours, currentTime)
 	s := CompletedWorkflowsLabelSelector()
 	s.MatchExpressions = append(s.MatchExpressions, v1.LabelSelectorRequirement{
-		Key:      hourOfDayCompletedKey,
+		Key:      completedTimeKey,
 		Operator: v1.LabelSelectorOpNotIn,
+		Values:   hoursToKeep,
+	})
+	return s
+}
+
+func CompletedWorkflowsSelectorOutsideRetentionPeriodAbordon(retentionPeriodHours int, currentTime time.Time) *v1.LabelSelector {
+	hoursToKeep := CalculateHoursToDelete(retentionPeriodHours-1, currentTime.Hour())
+	s := CompletedWorkflowsLabelSelector()
+	s.MatchExpressions = append(s.MatchExpressions, v1.LabelSelectorRequirement{
+		Key:      hourOfDayCompletedKey,
+		Operator: v1.LabelSelectorOpIn,
 		Values:   hoursToKeep,
 	})
 	return s
