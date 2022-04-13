@@ -72,9 +72,9 @@ func (g *GarbageCollector) deleteWorkflows(ctx context.Context) error {
 	return nil
 }
 
-func (g *GarbageCollector) deleteWorkflowsAbordon(ctx context.Context) error {
+func (g *GarbageCollector) deleteWorkflowsAbandon(ctx context.Context) error {
 
-	s := CompletedWorkflowsSelectorOutsideRetentionPeriodAbordon(g.ttlHours, g.clk.Now())
+	s := CompletedWorkflowsSelectorOutsideRetentionPeriodAbandon(g.ttlHours, g.clk.Now())
 
 	// Delete doesn't support 'all' namespaces. Let's fetch namespaces and loop over each.
 	if g.namespace == "" || strings.ToLower(g.namespace) == "all" || strings.ToLower(g.namespace) == "all-namespaces" {
@@ -134,7 +134,7 @@ func (g *GarbageCollector) runGC(ctx context.Context, ticker clock.Ticker) {
 		case <-ticker.C():
 			logger.Infof(ctx, "Garbage collector running...")
 			t := g.metrics.gcTime.Start(ctx)
-			if err := g.deleteWorkflowsAbordon(ctx); err != nil {
+			if err := g.deleteWorkflowsAbandon(ctx); err != nil {
 				logger.Errorf(ctx, "Garbage collection failed in this round.Error : [%v]", err)
 			}
 			if err := g.deleteWorkflows(ctx); err != nil {
