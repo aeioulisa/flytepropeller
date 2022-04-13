@@ -44,7 +44,7 @@ func SetCompletedLabel(w *v1alpha1.FlyteWorkflow, currentTime time.Time) {
 	}
 	w.Labels[workflowTerminationStatusKey] = workflowTerminatedValue
 	w.Labels[hourOfDayCompletedKey] = strings.ReplaceAll(
-		strings.Split(currentTime.Round(time.Hour).String(), " +")[0], " ", ".")
+		strings.Split(currentTime.Round(time.Hour).String(), ":")[0], " ", ".")
 }
 
 func HasCompletedLabel(w *v1alpha1.FlyteWorkflow) bool {
