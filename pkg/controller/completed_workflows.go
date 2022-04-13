@@ -43,7 +43,7 @@ func SetCompletedLabel(w *v1alpha1.FlyteWorkflow, currentTime time.Time) {
 		w.Labels = make(map[string]string)
 	}
 	w.Labels[workflowTerminationStatusKey] = workflowTerminatedValue
-	w.Labels[hourOfDayCompletedKey] = strings.ReplaceAll(
+	w.Labels[completedTimeKey] = strings.ReplaceAll(
 		strings.Split(currentTime.Round(time.Hour).String(), ":")[0], " ", ".")
 }
 
