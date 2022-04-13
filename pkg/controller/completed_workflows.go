@@ -97,16 +97,20 @@ func CompletedWorkflowsSelectorOutsideRetentionPeriod(retentionPeriodHours int, 
 		Operator: v1.LabelSelectorOpNotIn,
 		Values:   hoursToKeep,
 	})
+	s.MatchExpressions = append(s.MatchExpressions, v1.LabelSelectorRequirement{
+		Key:      hourOfDayCompletedKey,
+		Operator: v1.LabelSelectorOpDoesNotExist,
+	})
 	return s
 }
 
 func CompletedWorkflowsSelectorOutsideRetentionPeriodAbordon(retentionPeriodHours int, currentTime time.Time) *v1.LabelSelector {
-	hoursToKeep := CalculateHoursToDelete(retentionPeriodHours-1, currentTime.Hour())
+	hoursToDelete := CalculateHoursToDelete(retentionPeriodHours-1, currentTime.Hour())
 	s := CompletedWorkflowsLabelSelector()
 	s.MatchExpressions = append(s.MatchExpressions, v1.LabelSelectorRequirement{
 		Key:      hourOfDayCompletedKey,
 		Operator: v1.LabelSelectorOpIn,
-		Values:   hoursToKeep,
+		Values:   hoursToDelete,
 	})
 	return s
 }
